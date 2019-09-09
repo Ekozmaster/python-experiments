@@ -3,7 +3,7 @@ data = [(0.5, 3.0), (1.0, 2.0), (1.0, 1.0), (1.5, 1.5), (2.0, 1.0), (3.0, 1.0),
 labels = [(1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0),
           (0, 1), (0, 1), (0, 1), (0, 1), (0, 1), (0, 1), (0, 1)]
 
-
+# A genuine "Extreme Go Horse" unfinished implementation of a neural network. Obviously isn't working.
 class NN:
     inputs = [0, 0]
     outputs = [0, 0]

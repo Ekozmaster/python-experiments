@@ -5,6 +5,9 @@ fig = plt.figure()
 ax = fig.add_subplot(111, aspect='equal')
 
 
+# If you rotate the i and j canonical base's axes by 15 degrees CW and CCW respectively so that they get
+# 120 degrees from each other, you get a skewed grid with equilateral triangles. That way instead of making bilinear
+# interpolations, you can easily interpolate inside the current triangle.
 def skewed_grid():
     system_basis = np.mat([[0.96592582628, -0.2588190451], [-0.2588190451, 0.96592582628]])
     for x in range(-3, 3):
