@@ -57,7 +57,7 @@ def run():
         board_a = board_b
         board_b = temp
 
-        plt.imshow(Image.fromarray(board_b))
+        plt.imshow(Image.fromarray(board_b.astype(np.int8)))
         plt.pause(1/60)
 
 
