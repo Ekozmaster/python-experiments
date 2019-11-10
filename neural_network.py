@@ -13,7 +13,7 @@ class NeuralNetwork:
     training_data = []
     training_labels = []
 
-    # Pass a list of neurons count on each layer (eg. [2,3,2] -> 2 input neurons, 3 in a hidden layer, 2 in output)
+    # Receives a list of neurons count on each layer (eg. [2,3,4] -> 2 input neurons, 3 in a hidden layer, 4 in output)
     def __init__(self, layers_setup):
         # Neurons
         layers_neurons = []
@@ -25,10 +25,6 @@ class NeuralNetwork:
         self.weights = []
         # He-et-al weights initialization:
         # random(neurons_in_prev + neurons_in_cur) * sqrt(2.0 / (neurons_in_prev + neurons_in_cur)).
-        # Properly initializing weights in a network is a pretty important step. If not done appropriately it might
-        # never converge to a solution, or take an eternity to learn, due to vanishing/exploding gradients and such.
-        # A good quick read:
-        # https://towardsdatascience.com/weight-initialization-techniques-in-neural-networks-26c649eb3b78
         for i in range(1, len(layers_setup)):
             self.weights.append(np.random.randn(layers_setup[i], layers_setup[i - 1]) *
                                 np.sqrt(2 / (layers_setup[i - 1] + layers_setup[i])))
@@ -52,35 +48,43 @@ class NeuralNetwork:
 
     def train(self, batch_size=0):
         self.reset_aux_data()
-        batch_size_normalizer = batch_size or len(self.training_data)  # If batch_size == 0, take whole data as a batch.
+        batch_size_normalizer = batch_size or len(self.training_data)  # If batch_size == 0, it is a single batch.
         # For every training sample
         for data_index in range(0, len(self.training_data)):
-            # Feedforward
+            # Feeding input layer
             self.neurons[0] = np.array(self.training_data[data_index])
+
             self.feed_forward()
-            error = self.neurons[-1] - np.array(self.training_labels[data_index])
+            self.set_error(self.neurons[-1] - np.array(self.training_labels[data_index]))
+            self.backpropagate()
 
-            # Derivative of cost function (error^2) with respect to each neuron in the last layer.
-            self.neurons_dCdA[-1] = 2 * error
-
-            # Backpropagation
-            # For every layer backwards
-            for layer in reversed(range(len(self.weights))):
-                dAdZ_dCdA = np.array([self.d_leaky_relu(self.neurons_linear[layer + 1]) * self.neurons_dCdA[layer]])
-                # Applying partial derivatives of the cost function with respect to biases (dCdB).
-                self.biases_feedback[layer] -= dAdZ_dCdA.flatten()
-                # With respect to weights (dCdW).
-                self.weights_feedback[layer] -= np.matmul(dAdZ_dCdA.transpose(), np.array([self.neurons[layer]]))
-
-                if layer > 0:
-                    # Saving this dCdA to use in the next iteration to compute dCdWs and dCdBs for the previous layer.
-                    self.neurons_dCdA[layer - 1] = np.matmul(self.weights[layer].transpose(), dAdZ_dCdA.transpose()).flatten()
             # If finished current batch, apply the weights/biases' feedback averaged across all the batch samples
             # to the NN attenuated by the Learning Rate.
             if (data_index + 1) % batch_size_normalizer == 0 or (data_index + 1) % len(self.training_data) == 0:
-                self.weights += self.weights_feedback * self.learningRate / batch_size_normalizer
-                self.biases += self.biases_feedback * self.learningRate / batch_size_normalizer
-                self.reset_aux_data()
+                self.apply_gradients(batch_size_normalizer)
+
+    def set_error(self, error):
+        # Derivative of cost function (error^2) with respect to each neuron in the last layer.
+        self.neurons_dCdA[-1] = 2 * error
+
+    def backpropagate(self):
+        # For every layer backwards
+        for layer in reversed(range(len(self.weights))):
+            dAdZ_dCdA = np.array([self.d_leaky_relu(self.neurons_linear[layer + 1]) * self.neurons_dCdA[layer]])
+            # Applying partial derivatives of the cost function with respect to biases (dCdB).
+            self.biases_feedback[layer] -= dAdZ_dCdA.flatten()
+            # With respect to weights (dCdW).
+            self.weights_feedback[layer] -= np.matmul(dAdZ_dCdA.transpose(), np.array([self.neurons[layer]]))
+
+            if layer > 0:
+                # Saving this dCdA to use in the next iteration to compute dCdWs and dCdBs for the previous layer.
+                self.neurons_dCdA[layer - 1] = np.matmul(self.weights[layer].transpose(),
+                                                         dAdZ_dCdA.transpose()).flatten()
+
+    def apply_gradients(self, grad_training_count):
+        self.weights += self.weights_feedback * self.learningRate / grad_training_count
+        self.biases += self.biases_feedback * self.learningRate / grad_training_count
+        self.reset_aux_data()
 
     @staticmethod
     def leaky_relu(activation):
