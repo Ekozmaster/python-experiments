@@ -1,4 +1,4 @@
-# Simple Dense Deep Neural Network. Written by Emanuel Kozerski and available at:
+# Simple Dense Deep Neural Network.
 # https://github.com/Ekozmaster/python-experiments/blob/master/neural_network.py
 
 # All layers are densely connected. You must initialize it with a list of neurons by layer:
